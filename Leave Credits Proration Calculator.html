@@ -1,0 +1,692 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Leave Credits Proration Calculator</title>
+<style>
+  :root { color-scheme: light; }
+  * { box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    margin: 0;
+    padding: 24px;
+    background: #f5f7fa;
+    color: #1f2937;
+    line-height: 1.5;
+  }
+  .container { max-width: 920px; margin: 0 auto; }
+  h1 {
+    font-size: 22px;
+    margin: 0 0 4px;
+    color: #0f172a;
+    letter-spacing: -0.01em;
+  }
+  .subtitle { color: #64748b; font-size: 13px; margin-bottom: 20px; }
+
+  .tabs { display: flex; gap: 4px; margin-bottom: 16px; border-bottom: 1px solid #e2e8f0; }
+  .tab {
+    padding: 10px 18px;
+    cursor: pointer;
+    background: transparent;
+    border: none;
+    font-size: 14px;
+    font-weight: 600;
+    color: #64748b;
+    border-bottom: 2px solid transparent;
+    transition: all 0.15s;
+  }
+  .tab:hover { color: #1e293b; }
+  .tab.active { color: #b91c1c; border-bottom-color: #b91c1c; }
+
+  .panel { display: none; }
+  .panel.active { display: block; }
+
+  .card {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    padding: 20px;
+    margin-bottom: 16px;
+    box-shadow: 0 1px 2px rgba(15,23,42,0.04);
+  }
+  .card h2 {
+    font-size: 14px;
+    margin: 0 0 14px;
+    color: #0f172a;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-weight: 700;
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 14px;
+  }
+  label {
+    display: block;
+    font-size: 12px;
+    font-weight: 600;
+    color: #475569;
+    margin-bottom: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+  }
+  input[type="date"], input[type="number"], select {
+    width: 100%;
+    padding: 9px 12px;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    font-size: 14px;
+    font-family: inherit;
+    background: #ffffff;
+    color: #0f172a;
+    transition: border-color 0.15s, box-shadow 0.15s;
+  }
+  input[type="date"]:focus, input[type="number"]:focus, select:focus {
+    outline: none;
+    border-color: #b91c1c;
+    box-shadow: 0 0 0 3px rgba(185,28,28,0.12);
+  }
+
+  .help { font-size: 11px; color: #94a3b8; margin-top: 4px; }
+
+  .results {
+    background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+    color: #f8fafc;
+    border-radius: 10px;
+    padding: 22px;
+    margin-top: 16px;
+  }
+  .results h2 { color: #f8fafc; margin-top: 0; }
+  .result-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-top: 14px;
+  }
+  .result-card {
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(248,250,252,0.1);
+    border-radius: 8px;
+    padding: 16px;
+  }
+  .result-card .label-tag {
+    display: inline-block;
+    padding: 3px 9px;
+    background: #b91c1c;
+    color: #ffffff;
+    font-size: 11px;
+    font-weight: 700;
+    border-radius: 4px;
+    letter-spacing: 0.04em;
+    margin-bottom: 10px;
+  }
+  .result-card .label-tag.sl { background: #475569; }
+  .result-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 5px 0;
+    font-size: 13px;
+    border-bottom: 1px dashed rgba(248,250,252,0.1);
+  }
+  .result-row:last-child { border-bottom: none; }
+  .result-row .key { color: #cbd5e1; }
+  .result-row .val { font-variant-numeric: tabular-nums; font-weight: 600; }
+  .result-row.total {
+    margin-top: 8px;
+    padding-top: 10px;
+    border-top: 1px solid rgba(248,250,252,0.2);
+    border-bottom: none;
+    font-size: 15px;
+  }
+  .result-row.total .key { color: #f8fafc; font-weight: 600; }
+  .result-row.total .val {
+    color: #fca5a5;
+    font-size: 22px;
+    font-weight: 700;
+  }
+  .result-row.total.sl .val { color: #cbd5e1; }
+
+  .rounded-box {
+    margin-top: 10px;
+    padding: 10px 12px;
+    background: rgba(254,243,199,0.12);
+    border: 1px dashed rgba(252,211,77,0.4);
+    border-radius: 6px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .rounded-box .label-side {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: #fde68a;
+    font-weight: 700;
+  }
+  .rounded-box .rounded-val {
+    font-size: 24px;
+    font-weight: 800;
+    color: #fde68a;
+    font-variant-numeric: tabular-nums;
+  }
+  .rounded-box .rounded-mode {
+    font-size: 10px;
+    color: #fde68a;
+    opacity: 0.75;
+    margin-top: 2px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+
+  .formula {
+    font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+    font-size: 12px;
+    background: rgba(255,255,255,0.04);
+    padding: 8px 10px;
+    border-radius: 5px;
+    margin-top: 10px;
+    color: #cbd5e1;
+  }
+
+  .summary-banner {
+    background: #fef3c7;
+    border: 1px solid #fde68a;
+    color: #78350f;
+    padding: 10px 14px;
+    border-radius: 6px;
+    margin-bottom: 16px;
+    font-size: 13px;
+    display: none;
+  }
+  .summary-banner.visible { display: block; }
+  .summary-banner.error {
+    background: #fee2e2;
+    border-color: #fca5a5;
+    color: #991b1b;
+  }
+
+  .footer-note {
+    color: #64748b;
+    font-size: 11px;
+    margin-top: 18px;
+    text-align: center;
+  }
+
+  .rounding-controls {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 14px;
+    padding: 10px 14px;
+    background: #f1f5f9;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+  }
+  .rounding-controls label {
+    margin-bottom: 0;
+    white-space: nowrap;
+  }
+  .rounding-controls select {
+    width: auto;
+    min-width: 240px;
+  }
+
+  .rule-note {
+    font-size: 11px;
+    color: #64748b;
+    margin-left: 8px;
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>Leave Credits Proration Calculator</h1>
+  <div class="subtitle">Compute pro-rated VL/SL credits for regularization or resignation. Enter the date — the rest is automatic.</div>
+
+  <div class="tabs">
+    <button class="tab active" data-tab="reg">Regularization</button>
+    <button class="tab" data-tab="res">Resignation</button>
+  </div>
+
+  <!-- REGULARIZATION PANEL -->
+  <div class="panel active" id="panel-reg">
+    <div class="card">
+      <h2>Inputs</h2>
+      <div class="grid">
+        <div>
+          <label for="reg-date">Regularization Date</label>
+          <input type="date" id="reg-date" />
+          <div class="help">Date employee becomes regular</div>
+        </div>
+        <div>
+          <label for="reg-year-end">Year-End Reference</label>
+          <input type="date" id="reg-year-end" />
+          <div class="help">Defaults to Dec 31 of regularization year</div>
+        </div>
+        <div>
+          <label for="reg-vl">Annual VL Entitlement</label>
+          <input type="number" id="reg-vl" value="10" min="0" step="0.5" />
+        </div>
+        <div>
+          <label for="reg-sl">Annual SL Entitlement</label>
+          <input type="number" id="reg-sl" value="5" min="0" step="0.5" />
+        </div>
+      </div>
+      <div class="rounding-controls" style="margin-top:14px;">
+        <label for="reg-round">Rounding Mode</label>
+        <select id="reg-round">
+          <option value="hr">HR rule — floor to nearest 0.5</option>
+          <option value="half">Nearest 0.5 (standard)</option>
+          <option value="whole">Nearest whole</option>
+          <option value="up">Round up (ceiling)</option>
+          <option value="down">Round down (floor)</option>
+        </select>
+        <span class="rule-note">Rule: &lt; .50 → whole; ≥ .50 → x.5</span>
+      </div>
+    </div>
+    <div id="reg-banner" class="summary-banner"></div>
+    <div class="results" id="reg-results">
+      <h2>Pro-Rated Leave Credits Upon Regularization</h2>
+      <div id="reg-summary" style="font-size:13px;color:#cbd5e1;"></div>
+      <div class="result-grid">
+        <div class="result-card">
+          <span class="label-tag">Vacation Leave</span>
+          <div class="result-row"><span class="key">Days remaining in year</span><span class="val" id="reg-vl-days">—</span></div>
+          <div class="result-row"><span class="key">Total days in year</span><span class="val" id="reg-vl-total">—</span></div>
+          <div class="result-row"><span class="key">Annual entitlement</span><span class="val" id="reg-vl-annual">—</span></div>
+          <div class="result-row total"><span class="key">Pro-rated VL (exact)</span><span class="val" id="reg-vl-result">—</span></div>
+          <div class="rounded-box">
+            <div>
+              <div class="label-side">Rounded VL</div>
+              <div class="rounded-mode" id="reg-vl-mode">—</div>
+            </div>
+            <div class="rounded-val" id="reg-vl-rounded">—</div>
+          </div>
+          <div class="formula" id="reg-vl-formula">—</div>
+        </div>
+        <div class="result-card">
+          <span class="label-tag sl">Sick Leave</span>
+          <div class="result-row"><span class="key">Days remaining in year</span><span class="val" id="reg-sl-days">—</span></div>
+          <div class="result-row"><span class="key">Total days in year</span><span class="val" id="reg-sl-total">—</span></div>
+          <div class="result-row"><span class="key">Annual entitlement</span><span class="val" id="reg-sl-annual">—</span></div>
+          <div class="result-row total sl"><span class="key">Pro-rated SL (exact)</span><span class="val" id="reg-sl-result">—</span></div>
+          <div class="rounded-box">
+            <div>
+              <div class="label-side">Rounded SL</div>
+              <div class="rounded-mode" id="reg-sl-mode">—</div>
+            </div>
+            <div class="rounded-val" id="reg-sl-rounded">—</div>
+          </div>
+          <div class="formula" id="reg-sl-formula">—</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RESIGNATION PANEL -->
+  <div class="panel" id="panel-res">
+    <div class="card">
+      <h2>Inputs</h2>
+      <div class="grid">
+        <div>
+          <label for="res-date">Last Working Day</label>
+          <input type="date" id="res-date" />
+          <div class="help">Effective date of resignation</div>
+        </div>
+        <div>
+          <label for="res-year-start">Year Start Reference</label>
+          <input type="date" id="res-year-start" />
+          <div class="help">Defaults to Jan 1 of resignation year</div>
+        </div>
+        <div>
+          <label for="res-vl">Annual VL Entitlement</label>
+          <input type="number" id="res-vl" value="10" min="0" step="0.5" />
+        </div>
+        <div>
+          <label for="res-sl">Annual SL Entitlement</label>
+          <input type="number" id="res-sl" value="5" min="0" step="0.5" />
+        </div>
+        <div>
+          <label for="res-vl-carry">VL Carryover (Prior Year)</label>
+          <input type="number" id="res-vl-carry" value="0" min="0" step="0.5" />
+        </div>
+        <div>
+          <label for="res-sl-carry">SL Carryover (Prior Year)</label>
+          <input type="number" id="res-sl-carry" value="0" min="0" step="0.5" />
+        </div>
+        <div>
+          <label for="res-vl-used">VL Already Used</label>
+          <input type="number" id="res-vl-used" value="0" min="0" step="0.5" />
+        </div>
+        <div>
+          <label for="res-sl-used">SL Already Used</label>
+          <input type="number" id="res-sl-used" value="0" min="0" step="0.5" />
+        </div>
+      </div>
+      <div class="rounding-controls" style="margin-top:14px;">
+        <label for="res-round">Rounding Mode</label>
+        <select id="res-round">
+          <option value="hr">HR rule — floor to nearest 0.5</option>
+          <option value="half">Nearest 0.5 (standard)</option>
+          <option value="whole">Nearest whole</option>
+          <option value="up">Round up (ceiling)</option>
+          <option value="down">Round down (floor)</option>
+        </select>
+        <span class="rule-note">Rule: &lt; .50 → whole; ≥ .50 → x.5</span>
+      </div>
+    </div>
+    <div id="res-banner" class="summary-banner"></div>
+    <div class="results" id="res-results">
+      <h2>Remaining Leave Credits Upon Resignation</h2>
+      <div id="res-summary" style="font-size:13px;color:#cbd5e1;"></div>
+      <div class="result-grid">
+        <div class="result-card">
+          <span class="label-tag">Vacation Leave</span>
+          <div class="result-row"><span class="key">Days worked this year</span><span class="val" id="res-vl-days">—</span></div>
+          <div class="result-row"><span class="key">Total days in year</span><span class="val" id="res-vl-total">—</span></div>
+          <div class="result-row"><span class="key">Annual entitlement</span><span class="val" id="res-vl-annual">—</span></div>
+          <div class="result-row"><span class="key">Earned (pro-rated)</span><span class="val" id="res-vl-earned">—</span></div>
+          <div class="result-row"><span class="key">+ Carryover</span><span class="val" id="res-vl-carry-out">—</span></div>
+          <div class="result-row"><span class="key">– Already used</span><span class="val" id="res-vl-used-out">—</span></div>
+          <div class="result-row total"><span class="key">Can be used / paid (exact)</span><span class="val" id="res-vl-result">—</span></div>
+          <div class="rounded-box">
+            <div>
+              <div class="label-side">Rounded VL</div>
+              <div class="rounded-mode" id="res-vl-mode">—</div>
+            </div>
+            <div class="rounded-val" id="res-vl-rounded">—</div>
+          </div>
+          <div class="formula" id="res-vl-formula">—</div>
+        </div>
+        <div class="result-card">
+          <span class="label-tag sl">Sick Leave</span>
+          <div class="result-row"><span class="key">Days worked this year</span><span class="val" id="res-sl-days">—</span></div>
+          <div class="result-row"><span class="key">Total days in year</span><span class="val" id="res-sl-total">—</span></div>
+          <div class="result-row"><span class="key">Annual entitlement</span><span class="val" id="res-sl-annual">—</span></div>
+          <div class="result-row"><span class="key">Earned (pro-rated)</span><span class="val" id="res-sl-earned">—</span></div>
+          <div class="result-row"><span class="key">+ Carryover</span><span class="val" id="res-sl-carry-out">—</span></div>
+          <div class="result-row"><span class="key">– Already used</span><span class="val" id="res-sl-used-out">—</span></div>
+          <div class="result-row total sl"><span class="key">Can be used / paid (exact)</span><span class="val" id="res-sl-result">—</span></div>
+          <div class="rounded-box">
+            <div>
+              <div class="label-side">Rounded SL</div>
+              <div class="rounded-mode" id="res-sl-mode">—</div>
+            </div>
+            <div class="rounded-val" id="res-sl-rounded">—</div>
+          </div>
+          <div class="formula" id="res-sl-formula">—</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer-note">
+    Formula: <strong>Pro-rated Credit = (Service Days ÷ Days in Year) × Annual Entitlement</strong><br />
+    HR rounding rule: fractional part below .50 rounds down to whole; .50 and above rounds down to x.5 (e.g., 2.49 → 2, 4.79 → 4.5).
+  </div>
+</div>
+
+<script>
+(function() {
+  // --- Persistence ---
+  const LS_KEY = "leave_proration_state_v3";
+  function saveState() {
+    const state = {};
+    document.querySelectorAll("input, select").forEach(el => state[el.id] = el.value);
+    state.activeTab = document.querySelector(".tab.active").dataset.tab;
+    try { localStorage.setItem(LS_KEY, JSON.stringify(state)); } catch(e) {}
+  }
+  function loadState() {
+    try {
+      const raw = localStorage.getItem(LS_KEY);
+      if (!raw) return null;
+      return JSON.parse(raw);
+    } catch(e) { return null; }
+  }
+
+  // --- Tab handling ---
+  document.querySelectorAll(".tab").forEach(tab => {
+    tab.addEventListener("click", () => {
+      document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+      document.querySelectorAll(".panel").forEach(p => p.classList.remove("active"));
+      tab.classList.add("active");
+      document.getElementById("panel-" + tab.dataset.tab).classList.add("active");
+      saveState();
+    });
+  });
+
+  // --- Helpers ---
+  function isLeap(year) {
+    return (year % 4 === 0 && year % 100 !== 0) || (year % 400 === 0);
+  }
+  function daysInYear(year) { return isLeap(year) ? 366 : 365; }
+  function daysBetween(d1, d2) {
+    const ms = 1000 * 60 * 60 * 24;
+    return Math.round((d2 - d1) / ms) + 1;
+  }
+  function fmt(n, dp = 2) {
+    if (!isFinite(n)) return "—";
+    return Number(n).toLocaleString("en-US", { minimumFractionDigits: dp, maximumFractionDigits: dp });
+  }
+  function fmtDate(d) {
+    if (!d) return "";
+    return d.toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" });
+  }
+  function parseDate(v) {
+    if (!v) return null;
+    const [y, m, d] = v.split("-").map(Number);
+    return new Date(y, m - 1, d);
+  }
+  function ymd(d) {
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
+    return `${y}-${m}-${day}`;
+  }
+  // HR rule: fractional part < .50 → floor to whole; ≥ .50 → x.5
+  // Mathematically equivalent to: floor(value * 2) / 2
+  function hrRound(value) {
+    if (!isFinite(value)) return null;
+    const sign = value < 0 ? -1 : 1;
+    const abs = Math.abs(value);
+    return sign * (Math.floor(abs * 2) / 2);
+  }
+  function applyRound(value, mode) {
+    if (!isFinite(value)) return null;
+    if (mode === "hr")    return hrRound(value);
+    if (mode === "half")  return Math.round(value * 2) / 2;
+    if (mode === "whole") return Math.round(value);
+    if (mode === "up")    return Math.ceil(value);
+    if (mode === "down")  return Math.floor(value);
+    return value;
+  }
+  function modeLabel(mode) {
+    return ({
+      hr:    "HR rule — floor to nearest 0.5",
+      half:  "Rounded to nearest 0.5",
+      whole: "Rounded to nearest whole",
+      up:    "Rounded up (ceiling)",
+      down:  "Rounded down (floor)"
+    })[mode] || "—";
+  }
+  // Display rounded value cleanly: whole numbers without decimals, halves with 1 decimal
+  function fmtRounded(v, mode) {
+    if (v === null || !isFinite(v)) return "—";
+    if (mode === "whole" || mode === "up" || mode === "down") return fmt(v, 0);
+    // hr / half — show 1 decimal only when needed
+    return Number.isInteger(v) ? fmt(v, 0) : fmt(v, 1);
+  }
+
+  // --- Regularization calc ---
+  function calcReg() {
+    const banner = document.getElementById("reg-banner");
+    banner.classList.remove("visible", "error");
+
+    const regDateRaw = document.getElementById("reg-date").value;
+    let yearEndRaw = document.getElementById("reg-year-end").value;
+    const vlAnnual = parseFloat(document.getElementById("reg-vl").value) || 0;
+    const slAnnual = parseFloat(document.getElementById("reg-sl").value) || 0;
+    const roundMode = document.getElementById("reg-round").value;
+
+    if (!regDateRaw) {
+      document.getElementById("reg-summary").textContent = "Enter a regularization date to calculate.";
+      ["reg-vl-days","reg-vl-total","reg-vl-annual","reg-vl-result","reg-vl-formula","reg-vl-rounded","reg-vl-mode",
+       "reg-sl-days","reg-sl-total","reg-sl-annual","reg-sl-result","reg-sl-formula","reg-sl-rounded","reg-sl-mode"]
+        .forEach(id => document.getElementById(id).textContent = "—");
+      return;
+    }
+
+    const regDate = parseDate(regDateRaw);
+    const year = regDate.getFullYear();
+    if (!yearEndRaw) {
+      const defEnd = new Date(year, 11, 31);
+      document.getElementById("reg-year-end").value = ymd(defEnd);
+      yearEndRaw = ymd(defEnd);
+    }
+    const yearEnd = parseDate(yearEndRaw);
+
+    if (yearEnd < regDate) {
+      banner.textContent = "⚠ Year-end date must be on or after regularization date.";
+      banner.classList.add("visible", "error");
+      return;
+    }
+
+    const totalDays = daysInYear(year);
+    const remainingDays = daysBetween(regDate, yearEnd);
+    const vlProrated = (remainingDays / totalDays) * vlAnnual;
+    const slProrated = (remainingDays / totalDays) * slAnnual;
+    const vlRounded = applyRound(vlProrated, roundMode);
+    const slRounded = applyRound(slProrated, roundMode);
+
+    document.getElementById("reg-summary").innerHTML =
+      `Regularized on <strong>${fmtDate(regDate)}</strong> · ${remainingDays} days remaining in ${year}` +
+      (isLeap(year) ? " <em>(leap year)</em>" : "");
+
+    document.getElementById("reg-vl-days").textContent = remainingDays;
+    document.getElementById("reg-vl-total").textContent = totalDays;
+    document.getElementById("reg-vl-annual").textContent = fmt(vlAnnual, 1);
+    document.getElementById("reg-vl-result").textContent = fmt(vlProrated, 2);
+    document.getElementById("reg-vl-rounded").textContent = fmtRounded(vlRounded, roundMode);
+    document.getElementById("reg-vl-mode").textContent = modeLabel(roundMode);
+    document.getElementById("reg-vl-formula").textContent =
+      `(${remainingDays} ÷ ${totalDays}) × ${vlAnnual} = ${fmt(vlProrated, 4)} → ${fmtRounded(vlRounded, roundMode)}`;
+
+    document.getElementById("reg-sl-days").textContent = remainingDays;
+    document.getElementById("reg-sl-total").textContent = totalDays;
+    document.getElementById("reg-sl-annual").textContent = fmt(slAnnual, 1);
+    document.getElementById("reg-sl-result").textContent = fmt(slProrated, 2);
+    document.getElementById("reg-sl-rounded").textContent = fmtRounded(slRounded, roundMode);
+    document.getElementById("reg-sl-mode").textContent = modeLabel(roundMode);
+    document.getElementById("reg-sl-formula").textContent =
+      `(${remainingDays} ÷ ${totalDays}) × ${slAnnual} = ${fmt(slProrated, 4)} → ${fmtRounded(slRounded, roundMode)}`;
+  }
+
+  // --- Resignation calc ---
+  function calcRes() {
+    const banner = document.getElementById("res-banner");
+    banner.classList.remove("visible", "error");
+
+    const resDateRaw = document.getElementById("res-date").value;
+    let yearStartRaw = document.getElementById("res-year-start").value;
+    const vlAnnual = parseFloat(document.getElementById("res-vl").value) || 0;
+    const slAnnual = parseFloat(document.getElementById("res-sl").value) || 0;
+    const vlCarry = parseFloat(document.getElementById("res-vl-carry").value) || 0;
+    const slCarry = parseFloat(document.getElementById("res-sl-carry").value) || 0;
+    const vlUsed = parseFloat(document.getElementById("res-vl-used").value) || 0;
+    const slUsed = parseFloat(document.getElementById("res-sl-used").value) || 0;
+    const roundMode = document.getElementById("res-round").value;
+
+    if (!resDateRaw) {
+      document.getElementById("res-summary").textContent = "Enter the last working day to calculate.";
+      ["res-vl-days","res-vl-total","res-vl-annual","res-vl-earned","res-vl-carry-out","res-vl-used-out","res-vl-result","res-vl-formula","res-vl-rounded","res-vl-mode",
+       "res-sl-days","res-sl-total","res-sl-annual","res-sl-earned","res-sl-carry-out","res-sl-used-out","res-sl-result","res-sl-formula","res-sl-rounded","res-sl-mode"]
+        .forEach(id => document.getElementById(id).textContent = "—");
+      return;
+    }
+
+    const resDate = parseDate(resDateRaw);
+    const year = resDate.getFullYear();
+    if (!yearStartRaw) {
+      const defStart = new Date(year, 0, 1);
+      document.getElementById("res-year-start").value = ymd(defStart);
+      yearStartRaw = ymd(defStart);
+    }
+    const yearStart = parseDate(yearStartRaw);
+
+    if (resDate < yearStart) {
+      banner.textContent = "⚠ Last working day must be on or after the year-start reference.";
+      banner.classList.add("visible", "error");
+      return;
+    }
+
+    const totalDays = daysInYear(year);
+    const workedDays = daysBetween(yearStart, resDate);
+    const vlEarned = (workedDays / totalDays) * vlAnnual;
+    const slEarned = (workedDays / totalDays) * slAnnual;
+    const vlFinal = vlEarned + vlCarry - vlUsed;
+    const slFinal = slEarned + slCarry - slUsed;
+    const vlRounded = applyRound(vlFinal, roundMode);
+    const slRounded = applyRound(slFinal, roundMode);
+
+    document.getElementById("res-summary").innerHTML =
+      `Last working day <strong>${fmtDate(resDate)}</strong> · ${workedDays} service days in ${year}` +
+      (isLeap(year) ? " <em>(leap year)</em>" : "");
+
+    document.getElementById("res-vl-days").textContent = workedDays;
+    document.getElementById("res-vl-total").textContent = totalDays;
+    document.getElementById("res-vl-annual").textContent = fmt(vlAnnual, 1);
+    document.getElementById("res-vl-earned").textContent = fmt(vlEarned, 2);
+    document.getElementById("res-vl-carry-out").textContent = fmt(vlCarry, 2);
+    document.getElementById("res-vl-used-out").textContent = fmt(vlUsed, 2);
+    document.getElementById("res-vl-result").textContent = fmt(vlFinal, 2);
+    document.getElementById("res-vl-rounded").textContent = fmtRounded(vlRounded, roundMode);
+    document.getElementById("res-vl-mode").textContent = modeLabel(roundMode);
+    document.getElementById("res-vl-formula").textContent =
+      `(${workedDays} ÷ ${totalDays}) × ${vlAnnual} + ${vlCarry} − ${vlUsed} = ${fmt(vlFinal, 4)} → ${fmtRounded(vlRounded, roundMode)}`;
+
+    document.getElementById("res-sl-days").textContent = workedDays;
+    document.getElementById("res-sl-total").textContent = totalDays;
+    document.getElementById("res-sl-annual").textContent = fmt(slAnnual, 1);
+    document.getElementById("res-sl-earned").textContent = fmt(slEarned, 2);
+    document.getElementById("res-sl-carry-out").textContent = fmt(slCarry, 2);
+    document.getElementById("res-sl-used-out").textContent = fmt(slUsed, 2);
+    document.getElementById("res-sl-result").textContent = fmt(slFinal, 2);
+    document.getElementById("res-sl-rounded").textContent = fmtRounded(slRounded, roundMode);
+    document.getElementById("res-sl-mode").textContent = modeLabel(roundMode);
+    document.getElementById("res-sl-formula").textContent =
+      `(${workedDays} ÷ ${totalDays}) × ${slAnnual} + ${slCarry} − ${slUsed} = ${fmt(slFinal, 4)} → ${fmtRounded(slRounded, roundMode)}`;
+  }
+
+  function recalcAll() { calcReg(); calcRes(); saveState(); }
+
+  // --- Bind inputs ---
+  document.querySelectorAll("input, select").forEach(el => {
+    el.addEventListener("input", recalcAll);
+    el.addEventListener("change", recalcAll);
+  });
+
+  // --- Restore state or set defaults ---
+  const saved = loadState();
+  if (saved) {
+    Object.keys(saved).forEach(k => {
+      const el = document.getElementById(k);
+      if (el && k !== "activeTab") el.value = saved[k];
+    });
+    if (saved.activeTab) {
+      document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+      document.querySelectorAll(".panel").forEach(p => p.classList.remove("active"));
+      const targetTab = document.querySelector(`.tab[data-tab="${saved.activeTab}"]`);
+      if (targetTab) {
+        targetTab.classList.add("active");
+        document.getElementById("panel-" + saved.activeTab).classList.add("active");
+      }
+    }
+  }
+  recalcAll();
+})();
+</script>
+</body>
+</html>
